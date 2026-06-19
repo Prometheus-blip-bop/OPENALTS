@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
+import cors from "cors";
 import Razorpay from "razorpay";
 import crypto from "crypto";
 import { initializeApp as initFirebaseApp } from "firebase/app";
@@ -11,6 +12,7 @@ import firebaseConfig from "./firebase-applet-config.json";
 dotenv.config();
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 const PORT = 3000;

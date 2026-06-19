@@ -23,6 +23,7 @@ import {
   DollarSign,
   CreditCard
 } from "lucide-react";
+import { API_BASE_URL } from "../config";
 import { db, auth, handleFirestoreError, OperationType } from "../firebase";
 import { collection, addDoc, serverTimestamp, doc, setDoc } from "firebase/firestore";
 import { logUserInteraction } from "../utils/logger";
@@ -519,7 +520,7 @@ export default function CompareTool({ repoAObj, repoBObj, onClear, setView, onLo
     await logUserInteraction("ai_compare_market_repos", { repoA: slugA, repoB: slugB });
 
     try {
-      const res = await fetch("/api/ai/compare", {
+      const res = await fetch(`${API_BASE_URL}/api/ai/compare`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyPayload),
@@ -585,7 +586,7 @@ export default function CompareTool({ repoAObj, repoBObj, onClear, setView, onLo
     setIsChatLoading(true);
 
     try {
-      const res = await fetch("/api/ai/compare/chat", {
+      const res = await fetch(`${API_BASE_URL}/api/ai/compare/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

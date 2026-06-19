@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
+import { API_BASE_URL } from "../config";
 import { 
   X, 
   Sparkles, 
@@ -48,7 +50,7 @@ export default function ExplainDrawer({ isOpen, onClose, repo }: ExplainDrawerPr
       
       const fetchInitialExplanation = async () => {
         try {
-          const res = await fetch("/api/ai/explain", {
+          const res = await fetch(`${API_BASE_URL}/api/ai/explain`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -110,7 +112,7 @@ I was unable to load live searches, but here is a structural architecture overvi
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/ai/explain", {
+      const res = await fetch(`${API_BASE_URL}/api/ai/explain`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

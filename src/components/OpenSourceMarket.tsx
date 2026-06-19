@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { appCache } from "../utils/cache";
+import { API_BASE_URL } from "../config";
 import { 
   Search, 
   RefreshCw, 
@@ -148,7 +149,7 @@ export default function OpenSourceMarket({
     const activePage = reset ? 1 : targetPage;
     const queryParam = customQuery !== undefined ? customQuery : (selectedUseCase ? selectedUseCase.query : search);
     const sorting = activeSort || currentSort;
-    const url = `/api/github/search?category=${encodeURIComponent(category)}&q=${encodeURIComponent(queryParam)}&page=${activePage}&sort=${sorting}`;
+    const url = `${API_BASE_URL}/api/github/search?category=${encodeURIComponent(category)}&q=${encodeURIComponent(queryParam)}&page=${activePage}&sort=${sorting}`;
 
     // Use cached response if available
     if (appCache.has(url)) {

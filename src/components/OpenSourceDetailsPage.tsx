@@ -1,21 +1,36 @@
 import React, { useState, useEffect } from "react";
 import { appCache } from "../utils/cache";
 import { 
+  AlertCircle, 
   ArrowLeft, 
-  Star, 
-  GitFork, 
-  Shield, 
+  BarChart, 
   ExternalLink, 
-  Share2, 
-  Bookmark, 
-  User, 
-  RefreshCw, 
-  BookOpen, 
+  GitBranch, 
+  GitCommit, 
+  GitFork, 
+  GitMerge, 
+  GitPullRequest, 
+  Github, 
+  Globe, 
+  Info, 
+  MessageSquare, 
+  Play, 
+  Scale, 
+  Server, 
+  Shield, 
+  Sparkles, 
+  Star, 
+  Terminal, 
+  Users,
+  Share2,
+  Bookmark,
+  RefreshCw,
+  BookOpen,
   Code,
-  CheckCircle2,
-  AlertCircle
+  CheckCircle2
 } from "lucide-react";
-import Markdown from "react-markdown";
+import ReactMarkdown from "react-markdown";
+import { API_BASE_URL } from "../config";
 import { motion } from "motion/react";
 
 function sanitizeDescription(desc: string): string {
@@ -108,7 +123,7 @@ export default function OpenSourceDetailsPage({
       setError(null);
       try {
         // Fetch Details
-        const repoRes = await fetch(`/api/github/repo?owner=${encodeURIComponent(owner)}&name=${encodeURIComponent(name)}`);
+        const repoRes = await fetch(`${API_BASE_URL}/api/github/repo?owner=${encodeURIComponent(owner)}&name=${encodeURIComponent(name)}`);
         if (!repoRes.ok) {
           throw new Error("Could not load github repository criteria specs data");
         }
@@ -117,7 +132,7 @@ export default function OpenSourceDetailsPage({
 
         // Fetch README
         let readmeText = "";
-        const readmeRes = await fetch(`/api/github/readme?owner=${encodeURIComponent(owner)}&name=${encodeURIComponent(name)}`);
+        const readmeRes = await fetch(`${API_BASE_URL}/api/github/readme?owner=${encodeURIComponent(owner)}&name=${encodeURIComponent(name)}`);
         if (readmeRes.ok) {
           const readmeData = await readmeRes.json();
           readmeText = readmeData.content || "";
@@ -149,7 +164,7 @@ export default function OpenSourceDetailsPage({
     let items: any[] = [];
     try {
       const qStr = `language:${encodeURIComponent(lang)}`;
-      const res = await fetch(`/api/github/search?category=All&q=${qStr}`);
+      const res = await fetch(`${API_BASE_URL}/api/github/search?category=All&q=${qStr}`);
       if (res.ok) {
         const searchData = await res.json();
         items = (searchData.items || [])

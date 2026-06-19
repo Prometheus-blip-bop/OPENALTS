@@ -10,6 +10,7 @@ import {
   CreditCard,
   Users
 } from "lucide-react";
+import { API_BASE_URL } from "../config";
 import { doc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { logUserInteraction } from "../utils/logger";
@@ -325,7 +326,7 @@ export default function PricingPage({
       addToast?.(`Initiating checkout of ${finalCurrency} ${finalPrice}...`, "info");
 
       // 2. Call backend to create order (convert amount to paise/cents) using window.location.origin to prevent iframe sandbox domain errors
-      const orderRes = await fetch(`${window.location.origin}/api/create-order`, {
+      const orderRes = await fetch(`${API_BASE_URL}/api/create-order`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -369,7 +370,7 @@ export default function PricingPage({
           setLoadingTier(plan.id);
           try {
             // Use window.location.origin for absolute resolution to prevent CORS errors during Razorpay modal success callbacks
-            const verifyRes = await fetch(`${window.location.origin}/api/verify-payment`, {
+            const verifyRes = await fetch(`${API_BASE_URL}/api/verify-payment`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"

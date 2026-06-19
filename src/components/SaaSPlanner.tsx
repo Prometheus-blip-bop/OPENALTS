@@ -84,7 +84,7 @@ I am trained directly on open-source repositories and cloud provider pricing mar
     logUserInteraction("ai_planner_query", { query: query.substring(0, 50) });
 
     try {
-      const res = await fetch("/api/ai/planner/chat", {
+      const res = await fetch(`${API_BASE_URL}/api/ai/planner/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
