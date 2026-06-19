@@ -672,14 +672,14 @@ export default function PricingPage({
       <div className="bg-white border-4 border-black p-6 rounded-2xl shadow-[4px_4px_0_0_#000000] space-y-4">
         <div className="flex items-center gap-1.5 border-b border-stone-200 pb-2">
           <Shield className="h-5 w-5 text-black" />
-          <h3 className="font-sans font-black text-base text-black uppercase tracking-tight">Secure Payment & Money-Back Guarantee</h3>
+          <h3 className="font-sans font-black text-base text-black uppercase tracking-tight">Return & Cancellation Policy</h3>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-stone-700">
           <div className="space-y-1">
-            <h4 className="font-sans font-black text-black">Can I cancel anytime?</h4>
+            <h4 className="font-sans font-black text-black">Do you offer refunds?</h4>
             <p className="leading-relaxed">
-              Yes, absolutely. Canceling will immediately cease future automated renewals. Your Alt Pro access remains valid until the final expiration date of your current billing period.
+              No. Because we offer a completely free tier for you to explore and test the platform before committing, all Pro subscription payments are final and non-refundable. You can cancel your subscription at any time to prevent future billing.
             </p>
           </div>
           <div className="space-y-1">

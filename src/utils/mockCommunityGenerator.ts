@@ -262,7 +262,7 @@ export function generateMockCommunity(): { posts: Post[]; commentsMap: Record<st
   const r = new SeededRandom(20260613);
 
   // Generate 310 mock posts (at least 300!)
-  const totalPostsToGenerate = 310;
+  const totalPostsToGenerate = 10;
 
   for (let i = 1; i <= totalPostsToGenerate; i++) {
     const topicGroup = r.choose(BLOG_TOPICS);
