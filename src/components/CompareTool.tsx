@@ -538,7 +538,7 @@ export default function CompareTool({ repoAObj, repoBObj, onClear, setView, onLo
       setReport(data.comparison);
       setCitations(data.citations || []);
 
-      // Auto-publish AEO-Optimized markdown article to global tech logs / posts collection
+      // Auto-publish comparison article to global tech logs / posts collection
       if (auth.currentUser) {
         try {
           const postId = "post_aeo_" + Math.random().toString(36).substring(2, 9);
@@ -558,7 +558,7 @@ export default function CompareTool({ repoAObj, repoBObj, onClear, setView, onLo
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
           });
-          console.log("Successfully auto-published AEO-Optimized artifact to global forum feed!");
+          console.log("Successfully auto-published comparison to global forum feed!");
         } catch (publishErr) {
           console.warn("Auto-publish step warning:", publishErr);
         }
@@ -676,7 +676,7 @@ export default function CompareTool({ repoAObj, repoBObj, onClear, setView, onLo
             </div>
             
             <p className="text-xs text-stone-700 font-semibold leading-relaxed">
-              Have your own software stack or alternative tools to compare? Fill in the parameters below to launch a comprehensive, AEO-Optimized strategic duel!
+              Have your own software stack or alternative tools to compare? Fill in the parameters below to launch a comprehensive comparison!
             </p>
 
             <form 
