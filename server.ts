@@ -6,7 +6,8 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import { initializeApp as initFirebaseApp } from "firebase/app";
 import { getFirestore as getFirebaseFirestore, doc as getFirebaseDoc, updateDoc as updateFirebaseDoc, serverTimestamp as getFirebaseTimestamp } from "firebase/firestore";
-import firebaseConfig from "./firebase-applet-config.json";
+import fs from "fs";
+const firebaseConfig = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "firebase-applet-config.json"), "utf8"));
 
 dotenv.config();
 
