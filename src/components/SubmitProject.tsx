@@ -126,6 +126,15 @@ export default function SubmitProject({ onLogin, setView, onConsumeCredits }: Su
 
       // 3. Durable audit logger interaction
       await logUserInteraction("submit_project", { projectId, name: projectDoc.name });
+      
+      // 4. Broadcast to global Announcement Bar
+      await setDoc(doc(collection(db, "activities")), {
+        type: "submission",
+        message: `${auth.currentUser.displayName || "A developer"} just posted`,
+        linkText: projectDoc.name,
+        link: `/?view=details&project=${projectId}`,
+        createdAt: serverTimestamp()
+      });
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, path);
     } finally {

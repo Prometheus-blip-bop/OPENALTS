@@ -559,6 +559,15 @@ export default function CompareTool({ repoAObj, repoBObj, onClear, setView, onLo
             updatedAt: serverTimestamp()
           });
           console.log("Successfully auto-published comparison to global forum feed!");
+
+          // Broadcast to global Announcement Bar
+          await setDoc(doc(collection(db, "activities")), {
+            type: "battle",
+            message: `${auth.currentUser.displayName || "A developer"} just launched a battle:`,
+            linkText: `${data.comparison.nameA} vs ${data.comparison.nameB}`,
+            link: `/?view=community&postId=${postId}`,
+            createdAt: serverTimestamp()
+          });
         } catch (publishErr) {
           console.warn("Auto-publish step warning:", publishErr);
         }

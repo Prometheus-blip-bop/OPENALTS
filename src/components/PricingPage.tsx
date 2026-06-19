@@ -422,6 +422,18 @@ export default function PricingPage({
               billingPeriod: isAnnual ? "annual" : "monthly",
               paymentId: response.razorpay_payment_id
             });
+
+            // Broadcast to global Announcement Bar
+            if (auth.currentUser) {
+              const { collection, setDoc, doc, serverTimestamp } = await import("firebase/firestore");
+              await setDoc(doc(collection(db, "activities")), {
+                type: "upgrade",
+                message: `${auth.currentUser.displayName || "A developer"} just upgraded to`,
+                linkText: plan.name,
+                link: "/?view=pricing",
+                createdAt: serverTimestamp()
+              });
+            }
           } catch (vErr: any) {
             console.error("Verification failed:", vErr);
             addToast?.(`Payment verification failed: ${vErr.message}`, "warning");

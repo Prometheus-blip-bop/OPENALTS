@@ -44,6 +44,7 @@ import {
 
 import Sidebar from "./components/Sidebar";
 import ExplainDrawer from "./components/ExplainDrawer";
+import AnnouncementBar from "./components/AnnouncementBar";
 import { getDeviceFingerprint, normalizeEmail } from "./utils/fingerprint";
 
 // Lazy-loaded page components for super fast initial load
@@ -1106,6 +1107,10 @@ export default function App() {
         }`}
       >
         <div className="max-w-6xl mx-auto">
+          <div className="mb-6 rounded-2xl overflow-hidden shadow-[4px_4px_0_0_#000000]">
+            <AnnouncementBar />
+          </div>
+
           {/* DESKTOP LEVEL NAVIGATION HEADER BAR WITH NOTIFICATIONS BELL */}
           <div className={`hidden md:flex items-center justify-between border-4 bg-white p-4.5 rounded-2xl mb-8 relative font-sans transition-all duration-300 ${
             currentUserTier === "test_1rs" ? "border-emerald-500 shadow-[4px_4px_0_0_#10b981]" :
