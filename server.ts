@@ -6,7 +6,7 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import { initializeApp as initFirebaseApp } from "firebase/app";
 import { getFirestore as getFirebaseFirestore, doc as getFirebaseDoc, updateDoc as updateFirebaseDoc, serverTimestamp as getFirebaseTimestamp } from "firebase/firestore";
-import { firebaseConfig } from "./src/firebase-config";
+import { firebaseConfig } from "./src/firebase-config.js";
 
 dotenv.config();
 
