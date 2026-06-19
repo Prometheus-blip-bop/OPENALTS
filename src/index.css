@@ -1,0 +1,175 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Neobrutalist custom global resets and backgrounds */
+body {
+  background-color: #fffdf5; /* Off-white warm sand color */
+  color: #1a1a1a;
+}
+
+/* Custom Dotted/Grid Paper Background */
+.neo-grid-bg {
+  background-color: #fffdf5;
+  background-image: 
+    radial-gradient(#1a1a1a 1px, transparent 1px), 
+    radial-gradient(#1a1a1a 1px, #fffdf5 1px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+  background-opacity: 0.15;
+}
+
+/* Neobrutalist Design System Classes */
+.neo-card {
+  background-color: #ffffff;
+  border: 3px solid #000000;
+  border-radius: 12px;
+  box-shadow: 4px 4px 0px 0px #000000;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neo-card-hover:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px 0px #000000;
+}
+
+.neo-card-active:active {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0px 0px #000000;
+}
+
+.neo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 10px 18px;
+  border: 3px solid #000000;
+  border-radius: 8px;
+  box-shadow: 3px 3px 0px 0px #000000;
+  transition: all 0.1s ease;
+  cursor: pointer;
+}
+
+.neo-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px 0px #000000;
+}
+
+.neo-btn:active {
+  transform: translate(1.5px, 1.5px);
+  box-shadow: 1.5px 1.5px 0px 0px #000000;
+}
+
+.neo-btn-yellow {
+  background-color: #fde047; /* Yellow-300 */
+  color: #000000;
+}
+.neo-btn-yellow:hover {
+  background-color: #facc15; /* Yellow-400 */
+}
+
+.neo-btn-cyan {
+  background-color: #67e8f9; /* Cyan-300 */
+  color: #000000;
+}
+.neo-btn-cyan:hover {
+  background-color: #22d3ee; /* Cyan-400 */
+}
+
+.neo-btn-lime {
+  background-color: #86efac; /* Lime-300 / Green-300 */
+  color: #000000;
+}
+.neo-btn-lime:hover {
+  background-color: #4ade80; /* Lime-400 */
+}
+
+.neo-btn-orange {
+  background-color: #fed7aa; /* Orange-200 */
+  color: #000000;
+}
+.neo-btn-orange:hover {
+  background-color: #fdba74; /* Orange-300 */
+}
+
+.neo-btn-pink {
+  background-color: #fbcfe8; /* Pink-200 */
+  color: #000000;
+}
+.neo-btn-pink:hover {
+  background-color: #f9a8d4; /* Pink-300 */
+}
+
+.neo-btn-violet {
+  background-color: #ddd6fe; /* Violet-200 */
+  color: #000000;
+}
+.neo-btn-violet:hover {
+  background-color: #c4b5fd; /* Violet-300 */
+}
+
+.neo-btn-white {
+  background-color: #ffffff;
+  color: #000000;
+}
+.neo-btn-white:hover {
+  background-color: #f5f5f5;
+}
+
+.neo-btn-black {
+  background-color: #000000;
+  color: #ffffff;
+}
+.neo-btn-black:hover {
+  background-color: #1a1a1a;
+}
+
+.neo-input {
+  border: 3px solid #000000;
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-weight: 500;
+  outline: none;
+  box-shadow: 3px 3px 0px 0px #000000;
+  transition: all 0.1s ease;
+}
+
+.neo-input:focus {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px 0px #000000;
+}
+
+.neo-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border: 2px solid #000000;
+  background-color: #ffffff;
+  border-radius: 4px;
+  box-shadow: 1.5px 1.5px 0px 0px #000000;
+}
+
+/* Custom Scrollbar */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+

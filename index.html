@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenAlt - Open-Source Alternative Deck</title>
+    <script>
+      // Silence benign platform HMR event exceptions and WebSocket network errors
+      window.addEventListener('unhandledrejection', function(event) {
+        const reasonStr = event.reason ? String(event.reason.message || event.reason) : '';
+        if (reasonStr.includes('WebSocket') || reasonStr.includes('websocket') || reasonStr.includes('vite') || reasonStr.includes('HMR')) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }, true);
+
+      window.addEventListener('error', function(event) {
+        const errorMsg = event.message ? String(event.message) : '';
+        if (errorMsg.includes('WebSocket') || errorMsg.includes('websocket') || errorMsg.includes('vite') || errorMsg.includes('HMR')) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }, true);
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

@@ -1,0 +1,320 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Public user profiles containing display data and preferences",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique user ID matching Auth uid" },
+        "displayName": { "type": "string", "description": "Display name of the user" },
+        "avatarUrl": { "type": "string", "description": "Photo URL of the user's avatar" },
+        "bio": { "type": "string", "description": "Short bio about the user" },
+        "website": { "type": "string", "description": "Custom link, e.g. personal website or GitHub profile" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Profile creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Profile update timestamp" },
+        "username": { "type": "string", "description": "Custom verified platform username" },
+        "referralSource": { "type": "string", "description": "Where the user heard about the platform" }
+      },
+      "required": ["uid", "displayName", "createdAt", "username", "referralSource"]
+    },
+    "PrivateInfo": {
+      "title": "PrivateInfo",
+      "description": "Private PII data isolated for compliance and safety",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "User ID matching Auth uid" },
+        "email": { "type": "string", "description": "User private email address" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp of update" }
+      },
+      "required": ["uid", "email", "updatedAt"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Open source repositories or user submitted SaaS projects",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Project ID (slug or random ID)" },
+        "name": { "type": "string", "description": "Name of the project or repository" },
+        "description": { "type": "string", "description": "Detailed description of what it does" },
+        "url": { "type": "string", "description": "URL to the open source repo or live SaaS landing page" },
+        "tags": { "type": "array", "description": "Tags or keywords describing the tech stack or domain" },
+        "language": { "type": "string", "description": "Primary programming language" },
+        "stars": { "type": "integer", "description": "Number of stars (for repos) or upvotes (for SaaS)" },
+        "forks": { "type": "integer", "description": "Number of forks (for repos)" },
+        "license": { "type": "string", "description": "License type or pricing model for SaaS" },
+        "type": { "type": "string", "enum": ["open-source", "saas"], "description": "Project type" },
+        "submitterId": { "type": "string", "description": "UID of the user who submitted the project" },
+        "submitterName": { "type": "string", "description": "Display name of the submitter" },
+        "rating": { "type": "number", "description": "Average user rating" },
+        "ratingCount": { "type": "integer", "description": "Number of user ratings submitted" },
+        "upvotes": { "type": "integer", "description": "Total upvote/like count" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when submitted" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp of last modification" }
+      },
+      "required": ["id", "name", "description", "url", "type", "submitterId", "createdAt"]
+    },
+    "Like": {
+      "title": "Like",
+      "description": "Like association tracking to prevent duplicate votes",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "User who liked" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When liked" }
+      },
+      "required": ["userId", "createdAt"]
+    },
+    "Post": {
+      "title": "Post",
+      "description": "Community forum discussions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Post ID" },
+        "title": { "type": "string", "description": "Title of the post" },
+        "content": { "type": "string", "description": "Body markdown text" },
+        "authorId": { "type": "string", "description": "UID of post author" },
+        "authorName": { "type": "string", "description": "Name of post author" },
+        "authorAvatar": { "type": "string", "description": "Avatar of post author" },
+        "category": { "type": "string", "description": "Post category, e.g., 'General', 'Showcase', 'Feedback', 'Questions'" },
+        "tags": { "type": "array", "description": "Post keywords" },
+        "likesCount": { "type": "integer", "description": "Number of likes" },
+        "commentsCount": { "type": "integer", "description": "Number of comments" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Time of posting" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Time of updating" }
+      },
+      "required": [
+        "id",
+        "title",
+        "content",
+        "authorId",
+        "authorName",
+        "category",
+        "likesCount",
+        "commentsCount",
+        "createdAt"
+      ]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "Comments on community posts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Comment unique ID" },
+        "postId": { "type": "string", "description": "Parent Post ID" },
+        "content": { "type": "string", "description": "Comment markdown content" },
+        "authorId": { "type": "string", "description": "UID of commenter" },
+        "authorName": { "type": "string", "description": "Name of commenter" },
+        "authorAvatar": { "type": "string", "description": "Avatar URL" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Comment publication date" }
+      },
+      "required": ["id", "postId", "content", "authorId", "authorName", "createdAt"]
+    },
+    "Poll": {
+      "title": "Poll",
+      "description": "Community user polls about SaaS alternatives",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Poll unique ID" },
+        "question": { "type": "string", "description": "Question being asked" },
+        "options": { "type": "array", "description": "Options list containing text and count" },
+        "creatorId": { "type": "string", "description": "UID of the creator" },
+        "creatorName": { "type": "string", "description": "Display name of the creator" },
+        "creatorAvatar": { "type": "string", "description": "Avatar of the creator" },
+        "totalVotes": { "type": "integer", "description": "Total votes cast" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation date of the poll" }
+      },
+      "required": ["id", "question", "creatorId", "creatorName", "totalVotes", "createdAt"]
+    },
+    "PollVote": {
+      "title": "PollVote",
+      "description": "Vote mapping to ensure one vote per user per poll",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "User ID of the voter" },
+        "optionId": { "type": "string", "description": "The ID of the option selected" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the vote was cast" }
+      },
+      "required": ["userId", "optionId", "createdAt"]
+    },
+    "Interaction": {
+      "title": "Interaction",
+      "description": "Durable auditing files tracking user activity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Log ID" },
+        "userId": { "type": "string", "description": "User UID who interacted, or 'anonymous'" },
+        "userEmail": { "type": "string", "description": "User email address if authenticated" },
+        "actionType": { "type": "string", "description": "Action performed, e.g. search, select, compare, upvote, comment" },
+        "details": { "type": "string", "description": "Raw metadata/json of the activity logs" },
+        "timestamp": { "type": "string", "format": "date-time", "description": "Time event logged" }
+      },
+      "required": ["id", "userId", "actionType", "timestamp"]
+    },
+    "Battle": {
+      "title": "Battle",
+      "description": "Tribal community showdowns between two software options",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Battle showdown ID" },
+        "title": { "type": "string", "description": "The title of the showdown" },
+        "category": { "type": "string", "description": "Category for classification" },
+        "desc": { "type": "string", "description": "Showdown sub-pitch context details" },
+        "optionA": { "type": "object", "description": "Map representation of candidate A" },
+        "optionB": { "type": "object", "description": "Map representation of candidate B" },
+        "votesA": { "type": "integer", "description": "Total votes cast to defender option A" },
+        "votesB": { "type": "integer", "description": "Total votes cast to defender option B" },
+        "viralCount": { "type": "integer", "description": "Total clipboard invitation links generated" },
+        "deadlineAt": { "type": "string", "format": "date-time", "description": "Dynamic custom battle duration date" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Time of creation" }
+      },
+      "required": ["id", "title", "optionA", "optionB", "votesA", "votesB", "viralCount", "createdAt"]
+    },
+    "BattleComment": {
+      "title": "BattleComment",
+      "description": "Hot trash-talk comments on battle showdown sheets",
+      "type": "object",
+      "properties": {
+        "authorName": { "type": "string", "description": "Writer public nick name" },
+        "authorAvatar": { "type": "string", "description": "DiceBear or unsplash avatar illustration link" },
+        "content": { "type": "string", "description": "Direct debate description pitch text" },
+        "alliance": { "type": "string", "enum": ["A", "B"], "description": "Showdown client side alliance backer selection" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Time of comment entry" }
+      },
+      "required": ["authorName", "authorAvatar", "content", "alliance", "createdAt"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Payment records for a given user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Payment ID or transaction identifier" },
+        "amount": { "type": "number", "description": "Amount paid" },
+        "currency": { "type": "string", "description": "Currency of payment, e.g. INR, USD" },
+        "status": { "type": "string", "description": "Status of the transaction (e.g. captured, completed, pending, failed)" },
+        "plan": { "type": "string", "description": "Subscription or plan name purchased" },
+        "gateway": { "type": "string", "description": "Payment gateway, e.g. Razorpay, Paddle, Stripe" },
+        "orderId": { "type": "string", "description": "Order ID associated with the payment" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the payment was created/performed" }
+      },
+      "required": ["id", "amount", "currency", "status", "createdAt"]
+    },
+    "AdCampaign": {
+      "title": "AdCampaign",
+      "description": "User created SaaS advertisement campaign on the platform",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Campaign Unique ID" },
+        "userId": { "type": "string", "description": "UID of owner" },
+        "saasName": { "type": "string", "description": "Name of the advertised SaaS" },
+        "saasUrl": { "type": "string", "description": "URL of the advertised SaaS" },
+        "tagline": { "type": "string", "description": "SaaS pitch or tagline" },
+        "status": { "type": "string", "enum": ["draft", "pending", "active", "expired"] },
+        "impressions": { "type": "integer" },
+        "clicks": { "type": "integer" },
+        "bypassedWithFee": { "type": "boolean" },
+        "xLink": { "type": "string" },
+        "linkedinLink": { "type": "string" },
+        "redditLink": { "type": "string" },
+        "favoriteSaaS": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "saasName", "saasUrl", "tagline", "status", "createdAt"]
+    },
+    "AdProgress": {
+      "title": "AdProgress",
+      "description": "Tracks progress of user completing community quests to redeem free ad credits",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "invitedFounders": { "type": "array", "description": "List of emailed invited founders" },
+        "streakDays": { "type": "integer" },
+        "streakTimestamps": { "type": "array" },
+        "bypassed": { "type": "boolean" },
+        "adCredits": { "type": "integer" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "invitedFounders", "streakDays", "updatedAt"]
+    },
+    "Referral": {
+      "title": "Referral",
+      "description": "Indicates a verified or pending referral of a founder under invite-3-founders quest with anti-abuse device/canonical verification details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "referrerUid": { "type": "string" },
+        "referrerEmail": { "type": "string" },
+        "refereeUid": { "type": "string" },
+        "refereeEmail": { "type": "string" },
+        "refereeDeviceFingerprint": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "verified"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "referrerUid", "referrerEmail", "refereeUid", "refereeEmail", "refereeDeviceFingerprint", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Public user profiles"
+    },
+    "/users/{userId}/private/info": {
+      "schema": "PrivateInfo",
+      "description": "Private contact & PII data only readable by user"
+    },
+    "/users/{userId}/payments/{paymentId}": {
+      "schema": "Payment",
+      "description": "Payments list completed by user"
+    },
+    "/users/{userId}/adCampaigns/{campaignId}": {
+      "schema": "AdCampaign",
+      "description": "User created ad placements"
+    },
+    "/users/{userId}/adProgress/{progressId}": {
+      "schema": "AdProgress",
+      "description": "Tracks user progress for ad-tier unlocked credits"
+    },
+    "/projects/{projectId}": {
+      "schema": "Project",
+      "description": "SaaS and Open Source projects/repos"
+    },
+    "/projects/{projectId}/likes/{userId}": {
+      "schema": "Like",
+      "description": "Upvotes from users to protect against multiple votes"
+    },
+    "/posts/{postId}": {
+      "schema": "Post",
+      "description": "Community forum discussions"
+    },
+    "/posts/{postId}/likes/{userId}": {
+      "schema": "Like",
+      "description": "Likes from users on forum posts"
+    },
+    "/posts/{postId}/comments/{commentId}": {
+      "schema": "Comment",
+      "description": "Comments on community posts"
+    },
+    "/polls/{pollId}": {
+      "schema": "Poll",
+      "description": "Polls created by community users"
+    },
+    "/polls/{pollId}/votes/{userId}": {
+      "schema": "PollVote",
+      "description": "Votes casted on a specific poll keying by voter's uid"
+    },
+    "/interactions/{interactionId}": {
+      "schema": "Interaction",
+      "description": "Logged user interactions for future retrieval"
+    },
+    "/battles/{battleId}": {
+      "schema": "Battle",
+      "description": "Versus showdown arenas comparing standard libraries or custom packages"
+    },
+    "/battles/{battleId}/comments/{commentId}": {
+      "schema": "BattleComment",
+      "description": "Comments and community debates regarding specific battle options"
+    },
+    "/referrals/{referralId}": {
+      "schema": "Referral",
+      "description": "Records verified and anti-abuse filtered invites count for the platform"
+    }
+  }
+}

@@ -1,0 +1,442 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default catch-all: deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Public helper functions
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    
+    function incoming() { 
+      return request.resource.data; 
+    }
+    
+    function existing() { 
+      return resource.data; 
+    }
+    
+    function isSignedIn() { 
+      return request.auth != null; 
+    }
+
+    function isUserProfileOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // 1. PUBLIC PROFILES
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if isUserProfileOwner(userId) && isValidUserProfile(incoming());
+      allow update: if (isUserProfileOwner(userId) || incoming().diff(existing()).affectedKeys().hasOnly(['tier', 'subscriptionStatus', 'paddleCheckoutId', 'updatedAt', 'razorpayOrderId', 'razorpayPaymentId', 'razorpaySignature'])) && isValidUserProfile(incoming()) && (
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt
+      );
+      allow delete: if false;
+
+      // Private data subcollection, isolated PII
+      match /private/info {
+        allow read, write: if isUserProfileOwner(userId) && (request.method != 'write' || isValidPrivateInfo(incoming()));
+      }
+
+      // Bookmarks subcollection
+      match /bookmarks/{projectId} {
+        allow read, write: if isUserProfileOwner(userId);
+      }
+
+      // Notifications subcollection
+      match /notifications/{notificationId} {
+        allow read, delete: if isUserProfileOwner(userId);
+        allow create: if isSignedIn() && isValidNotification(incoming());
+        allow update: if isUserProfileOwner(userId) && incoming().read == true && incoming().diff(existing()).affectedKeys().hasOnly(['read']);
+      }
+
+      // Payments subcollection
+      match /payments/{paymentId} {
+        allow read: if isUserProfileOwner(userId);
+        allow create: if isUserProfileOwner(userId) && isValidId(paymentId) && isValidPayment(incoming());
+        allow update, delete: if false;
+      }
+
+      // Ad Campaigns (Allows rendering active promos to any viewer, but only owner edits)
+      match /adCampaigns/{campaignId} {
+        allow read: if true;
+        allow write: if isUserProfileOwner(userId);
+      }
+
+      // Ad Progress Quest Tracking (Only readable & writeable by the owner)
+      match /adProgress/{progressId} {
+        allow read, write: if isUserProfileOwner(userId);
+      }
+    }
+
+    // 2. PROJECTS (REPOS AND SAAS)
+    match /projects/{projectId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(projectId) && isValidProject(incoming());
+      allow update: if isSignedIn() && (
+        // Action 1: Owner updates their details
+        (request.auth.uid == existing().submitterId && 
+         incoming().submitterId == existing().submitterId &&
+         incoming().createdAt == existing().createdAt &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'url', 'tags', 'language', 'license', 'type', 'updatedAt'])) ||
+        // Action 2: Upvoting details (any user - supporting both upvote increment and decrement)
+        (incoming().diff(existing()).affectedKeys().hasOnly(['upvotes', 'updatedAt']) && (
+          (incoming().upvotes == existing().upvotes + 1 &&
+           (existsAfter(/databases/$(database)/documents/projects/$(projectId)/likes/$(request.auth.uid)) ||
+            exists(/databases/$(database)/documents/projects/$(projectId)/likes/$(request.auth.uid)))) ||
+          (incoming().upvotes == existing().upvotes - 1 &&
+           (!existsAfter(/databases/$(database)/documents/projects/$(projectId)/likes/$(request.auth.uid)) &&
+            !exists(/databases/$(database)/documents/projects/$(projectId)/likes/$(request.auth.uid)))) ||
+          (incoming().upvotes == 0 && existing().upvotes == 1 &&
+           (!existsAfter(/databases/$(database)/documents/projects/$(projectId)/likes/$(request.auth.uid)) &&
+            !exists(/databases/$(database)/documents/projects/$(projectId)/likes/$(request.auth.uid)))) ||
+          (incoming().upvotes == 0 && existing().upvotes == 0)
+        )) ||
+        // Action 3: Rating update (any signed-in user)
+        (incoming().rating is number &&
+         incoming().ratingCount == existing().ratingCount + 1 &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['rating', 'ratingCount', 'updatedAt']))
+      );
+      allow delete: if isSignedIn() && resource.data.submitterId == request.auth.uid;
+
+      // Like associations to prevent duplicate upvotes
+      match /likes/{userId} {
+        allow read: if true;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidLike(incoming());
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn() && isValidId(commentId) && isValidProjectComment(incoming());
+        allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+      }
+    }
+
+    // 3. FORUM POSTS
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(postId) && isValidPost(incoming());
+      allow update: if isSignedIn() && (
+        // Action 1: Creator editing details
+        (request.auth.uid == existing().authorId &&
+         incoming().authorId == existing().authorId &&
+         incoming().createdAt == existing().createdAt &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content', 'category', 'tags', 'updatedAt'])) ||
+        // Action 2: Comment count increment
+        (incoming().commentsCount == existing().commentsCount + 1 &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['commentsCount', 'updatedAt'])) ||
+        // Action 3: Post Liked
+        (incoming().likesCount == existing().likesCount + 1 &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['likesCount', 'updatedAt']) &&
+         existsAfter(/databases/$(database)/documents/posts/$(postId)/likes/$(request.auth.uid)))
+      );
+      allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+
+      // Likes on posts
+      match /likes/{userId} {
+        allow read: if true;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidLike(incoming());
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn() && isValidId(commentId) && isValidComment(incoming());
+        allow update: if isSignedIn() && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['likes'])
+        ) && incoming().likes is list && incoming().likes.size() <= 100;
+        allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+      }
+    }
+
+    // 4. INTERACTION LOGGING
+    match /interactions/{interactionId} {
+      allow read: if isSignedIn(); // Audited list reads
+      allow create: if isValidId(interactionId) && isValidInteraction(incoming());
+      allow update, delete: if false; // Logs are write-once
+    }
+
+    // 5. COMMUNITY POLLS
+    match /polls/{pollId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(pollId) && isValidPoll(incoming());
+      allow update: if isSignedIn() && (
+        // Action: User voting (increment totalVotes check, modify options count, ensure vote doc exists)
+        (incoming().totalVotes == existing().totalVotes + 1 &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['totalVotes', 'options']) &&
+         existsAfter(/databases/$(database)/documents/polls/$(pollId)/votes/$(request.auth.uid)))
+      );
+      allow delete: if isSignedIn() && resource.data.creatorId == request.auth.uid;
+
+      match /votes/{userId} {
+        allow read: if true;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidPollVote(incoming());
+        allow delete: if false;
+      }
+    }
+
+    // 6. BATTLEGROUNDS (COMMUNITY tribal warfare)
+    match /battles/{battleId} {
+      allow read: if true;
+      allow create: if isValidId(battleId) && isValidBattle(incoming());
+      allow update: if isValidBattle(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['votesA']) ||
+        incoming().diff(existing()).affectedKeys().hasOnly(['votesB']) ||
+        incoming().diff(existing()).affectedKeys().hasOnly(['viralCount']) ||
+        incoming().diff(existing()).affectedKeys().hasOnly(['deadlineAt'])
+      );
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn() && isValidId(commentId) && isValidBattleComment(incoming());
+        allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+      }
+    }
+
+    // 7. PUBLIC SPONSORSHIPS & LFTD
+    match /sponsorships/{sponsorshipId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(sponsorshipId) && isValidSponsorship(incoming());
+      allow update: if false; // immutable
+      allow delete: if false;
+    }
+
+    // 8. REFERRALS (For invite-3-founders anti-abuse validation)
+    match /referrals/{referralId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == incoming().refereeUid && isValidReferral(incoming());
+      allow update, delete: if false; // immutable audits
+    }
+  }
+}
+
+// VALIDATORS
+function isValidUserProfile(data) {
+  return data.keys().hasAll(['uid', 'displayName', 'avatarUrl', 'bio', 'website', 'createdAt', 'updatedAt', 'username', 'referralSource'])
+    && data.keys().size() >= 9 && data.keys().size() <= 25
+    && (request.auth != null ? data.uid == request.auth.uid : true)
+    && data.displayName is string && data.displayName.size() >= 0 && data.displayName.size() <= 300
+    && data.bio is string && data.bio.size() <= 3000
+    && data.website is string && data.website.size() <= 1000
+    && data.avatarUrl is string && data.avatarUrl.size() <= 2000
+    && data.username is string && data.username.size() >= 0 && data.username.size() <= 300
+    && data.referralSource is string && data.referralSource.size() >= 0 && data.referralSource.size() <= 300
+    && (data.createdAt is timestamp || data.createdAt is string)
+    && (data.updatedAt is timestamp || data.updatedAt is string)
+    && (data.get('tier', null) == null || data.tier is string && data.tier.size() <= 200)
+    && (data.get('subscriptionStatus', null) == null || data.subscriptionStatus is string && data.subscriptionStatus.size() <= 100)
+    && (data.get('paddleCheckoutId', null) == null || data.paddleCheckoutId is string && data.paddleCheckoutId.size() <= 300)
+    && (data.get('razorpayOrderId', null) == null || data.razorpayOrderId is string && data.razorpayOrderId.size() <= 300)
+    && (data.get('razorpayPaymentId', null) == null || data.razorpayPaymentId is string && data.razorpayPaymentId.size() <= 300)
+    && (data.get('razorpaySignature', null) == null || data.razorpaySignature is string && data.razorpaySignature.size() <= 1000);
+}
+
+function isValidPrivateInfo(data) {
+  return data.keys().hasAll(['uid', 'email', 'updatedAt'])
+    && data.keys().size() == 3
+    && data.uid == request.auth.uid
+    && data.email is string && data.email.size() <= 200
+    && data.updatedAt is timestamp;
+}
+
+function isValidBattleOption(option, alliance) {
+  return option.keys().hasAll(['id', 'name', 'color', 'tagline', 'alliance'])
+    && option.keys().size() == 5
+    && option.id is string && option.id.size() <= 100
+    && option.name is string && option.name.size() <= 150
+    && option.color is string && option.color.size() <= 200
+    && option.tagline is string && option.tagline.size() <= 300
+    && option.alliance == alliance;
+}
+
+function isValidBattle(data) {
+  return data.keys().hasAll(['id', 'title', 'optionA', 'optionB', 'votesA', 'votesB', 'viralCount', 'createdAt'])
+    && data.keys().size() >= 8 && data.keys().size() <= 11
+    && data.id is string && data.id.size() <= 100
+    && data.title is string && data.title.size() <= 200
+    && data.votesA is number
+    && data.votesB is number
+    && data.viralCount is number
+    && (data.get('deadlineAt', null) == null || data.deadlineAt is timestamp)
+    && (data.get('desc', null) == null || data.desc is string && data.desc.size() <= 1000)
+    && (data.get('category', null) == null || data.category is string && data.category.size() <= 100)
+    && isValidBattleOption(data.optionA, 'A')
+    && isValidBattleOption(data.optionB, 'B')
+    && data.createdAt is timestamp;
+}
+
+function isValidBattleComment(data) {
+  return data.keys().hasAll(['authorName', 'authorAvatar', 'content', 'alliance', 'createdAt'])
+    && data.keys().size() == 5
+    && data.authorName is string && data.authorName.size() <= 200
+    && data.authorAvatar is string && data.authorAvatar.size() <= 1000
+    && data.content is string && data.content.size() >= 1 && data.content.size() <= 400
+    && data.alliance in ['A', 'B']
+    && data.createdAt is timestamp;
+}
+
+function isValidSponsorship(data) {
+  return data.keys().hasAll(['id', 'projectId', 'sponsorName', 'targetType', 'targetValue', 'sponsoredType', 'amountPaid', 'status', 'createdAt'])
+    && data.keys().size() == 9
+    && data.id is string && data.id.size() <= 100
+    && data.projectId is string && data.projectId.size() <= 100
+    && data.sponsorName is string && data.sponsorName.size() <= 200
+    && data.targetType in ['category', 'competitor']
+    && data.targetValue is string && data.targetValue.size() <= 100
+    && data.sponsoredType in ['ltd', 'intercept']
+    && data.amountPaid is number
+    && data.status in ['active', 'pending']
+    && data.createdAt is timestamp;
+}
+
+function isValidProject(data) {
+  return data.keys().hasAll(['id', 'name', 'description', 'url', 'tags', 'language', 'stars', 'forks', 'license', 'type', 'submitterId', 'submitterName', 'rating', 'ratingCount', 'upvotes', 'createdAt', 'updatedAt'])
+    && (data.keys().size() == 17 || (data.keys().size() == 18 && data.get('alternativeTo', null) != null && data.alternativeTo is string))
+    && data.id is string && data.id.size() <= 200
+    && data.name is string && data.name.size() >= 1 && data.name.size() <= 200
+    && data.description is string && data.description.size() <= 5000
+    && data.url is string && data.url.size() <= 1000
+    && data.tags is list && data.tags.size() <= 15
+    && data.language is string && data.language.size() <= 100
+    && data.stars is int
+    && data.forks is int
+    && data.license is string && data.license.size() <= 100
+    && data.type in ['open-source', 'saas']
+    && data.submitterId is string
+    && data.submitterName is string && data.submitterName.size() <= 200
+    && data.rating is number
+    && data.ratingCount is int
+    && data.upvotes is int
+    && data.createdAt is timestamp
+    && data.updatedAt is timestamp;
+}
+
+function isValidLike(data) {
+  return data.keys().hasAll(['userId', 'createdAt'])
+    && data.keys().size() == 2
+    && data.userId == request.auth.uid
+    && data.createdAt is timestamp;
+}
+
+function isValidPost(data) {
+  return data.keys().hasAll(['id', 'title', 'content', 'authorId', 'authorName', 'authorAvatar', 'category', 'tags', 'likesCount', 'commentsCount', 'createdAt', 'updatedAt'])
+    && data.keys().size() == 12
+    && data.id is string && data.id.size() <= 200
+    && data.title is string && data.title.size() >= 3 && data.title.size() <= 500
+    && data.content is string && data.content.size() <= 10000
+    && data.authorId == request.auth.uid
+    && data.authorName is string && data.authorName.size() <= 200
+    && data.authorAvatar is string && data.authorAvatar.size() <= 1000
+    && data.category in ['General', 'Showcase', 'Feedback', 'Questions']
+    && data.tags is list && data.tags.size() <= 15
+    && data.likesCount is int
+    && data.commentsCount is int
+    && data.createdAt is timestamp
+    && data.updatedAt is timestamp;
+}
+
+function isValidComment(data) {
+  return data.keys().hasAll(['id', 'postId', 'content', 'authorId', 'authorName', 'authorAvatar', 'createdAt'])
+    && (data.keys().size() == 7 
+        || (data.keys().size() == 8 && (data.get('parentId', null) != null || data.get('likes', null) != null))
+        || (data.keys().size() == 9 && (data.get('parentId', null) != null && data.get('likes', null) != null)))
+    && data.id is string && data.id.size() <= 200
+    && data.postId is string && data.postId.size() <= 200
+    && data.content is string && data.content.size() >= 1 && data.content.size() <= 5000
+    && (request.method == 'create' ? data.authorId == request.auth.uid : data.authorId == resource.data.authorId)
+    && data.authorName is string && data.authorName.size() <= 200
+    && data.authorAvatar is string && data.authorAvatar.size() <= 1000
+    && data.createdAt is timestamp
+    && (data.get('parentId', null) == null || (data.parentId is string && data.parentId.size() <= 200))
+    && (data.get('likes', null) == null || (data.likes is list && data.likes.size() <= 100));
+}
+
+function isValidProjectComment(data) {
+  return data.keys().hasAll(['id', 'projectId', 'content', 'authorId', 'authorName', 'authorAvatar', 'createdAt'])
+    && data.keys().size() == 7
+    && data.id is string && data.id.size() <= 200
+    && data.projectId is string && data.projectId.size() <= 200
+    && data.content is string && data.content.size() >= 1 && data.content.size() <= 5000
+    && data.authorId == request.auth.uid
+    && data.authorName is string && data.authorName.size() <= 200
+    && data.authorAvatar is string && data.authorAvatar.size() <= 1000
+    && data.createdAt is timestamp;
+}
+
+function isValidNotification(data) {
+  return data.keys().hasAll(['id', 'userId', 'message', 'type', 'read', 'createdAt'])
+    && (data.keys().size() == 6 || (data.keys().size() == 7 && data.get('targetId', null) != null))
+    && data.id is string && data.id.size() <= 200
+    && data.userId is string && data.userId.size() <= 128
+    && data.message is string && data.message.size() <= 1000
+    && data.type in ['comment', 'forum', 'project', 'activity']
+    && data.read == false
+    && data.createdAt is timestamp
+    && (data.get('targetId', null) == null || (data.targetId is string && data.targetId.size() <= 200));
+}
+
+function isValidInteraction(data) {
+  return data.keys().hasAll(['id', 'userId', 'userEmail', 'actionType', 'details', 'timestamp'])
+    && data.keys().size() == 6
+    && data.id is string && data.id.size() <= 200
+    && data.userId is string
+    && data.userEmail is string && data.userEmail.size() <= 200
+    && data.actionType is string && data.actionType.size() <= 100
+    && data.details is string && data.details.size() <= 20000
+    && data.timestamp is timestamp;
+}
+
+function isValidPoll(data) {
+  return data.keys().hasAll(['id', 'question', 'options', 'creatorId', 'creatorName', 'creatorAvatar', 'totalVotes', 'createdAt'])
+    && data.keys().size() == 8
+    && data.id is string && data.id.size() <= 200
+    && data.question is string && data.question.size() >= 3 && data.question.size() <= 1000
+    && data.options is list && data.options.size() >= 2 && data.options.size() <= 6
+    && data.creatorId == request.auth.uid
+    && data.creatorName is string && data.creatorName.size() <= 200
+    && data.creatorAvatar is string && data.creatorAvatar.size() <= 1000
+    && data.totalVotes is int
+    && data.createdAt is timestamp;
+}
+
+function isValidPollVote(data) {
+  return data.keys().hasAll(['userId', 'optionId', 'createdAt'])
+    && data.keys().size() == 3
+    && data.userId == request.auth.uid
+    && data.optionId is string && data.optionId.size() <= 100
+    && data.createdAt is timestamp;
+}
+
+function isValidPayment(data) {
+  return data.keys().hasAll(['id', 'amount', 'currency', 'status', 'createdAt'])
+    && data.keys().size() >= 5 && data.keys().size() <= 10
+    && data.id is string && data.id.size() <= 200
+    && data.amount is number
+    && data.currency is string && data.currency.size() <= 10
+    && data.status is string && data.status.size() <= 50
+    && (data.get('plan', null) == null || (data.plan is string && data.plan.size() <= 100))
+    && (data.get('gateway', null) == null || (data.gateway is string && data.gateway.size() <= 100))
+    && (data.get('orderId', null) == null || (data.orderId is string && data.orderId.size() <= 200))
+    && (data.createdAt is timestamp || data.createdAt is string);
+}
+
+function isValidReferral(data) {
+  return data.keys().hasAll(['id', 'referrerUid', 'referrerEmail', 'refereeUid', 'refereeEmail', 'refereeDeviceFingerprint', 'status', 'createdAt'])
+    && data.keys().size() == 8
+    && data.id is string && data.id.size() <= 200
+    && data.referrerUid is string && data.referrerUid.size() <= 128
+    && data.referrerEmail is string && data.referrerEmail.size() <= 200
+    && data.refereeUid == request.auth.uid
+    && data.refereeEmail is string && data.refereeEmail.size() <= 200
+    && data.refereeDeviceFingerprint is string && data.refereeDeviceFingerprint.size() <= 400
+    && data.status in ['pending', 'verified']
+    && (data.createdAt is timestamp || data.createdAt is string);
+}

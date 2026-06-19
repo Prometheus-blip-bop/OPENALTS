@@ -1,0 +1,6 @@
+{
+  "name": "OpenAlt",
+  "description": "High-discovery search deck, comparison matrix, and community forum for open-source repositories and independent SaaS alternatives.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
