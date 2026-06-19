@@ -94,65 +94,7 @@ import {
   serverTimestamp
 } from "firebase/firestore";
 
-const MOCK_FEATURED_PROJECTS: Project[] = [
-  {
-    id: "mock_supabase",
-    name: "Supabase",
-    description: "The open source Firebase alternative. Build production-grade backends in minutes with instant PostgreSQL databasing, real-time sync, unified auth, storage, and serverless edge functions.",
-    url: "https://supabase.com",
-    tags: ["database", "realtime", "auth", "serverless"],
-    language: "TypeScript",
-    stars: 64200,
-    forks: 4800,
-    license: "Apache-2.0",
-    type: "open-source",
-    submitterId: "system",
-    submitterName: "OpenAlt Core",
-    rating: 4.9,
-    ratingCount: 340,
-    upvotes: 1845,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: "mock_penpot",
-    name: "Penpot",
-    description: "The next-generation open-source design and prototyping platform. Created for cross-functional teams, Penpot uses open web standards (SVG, CSS Grid) to keep design and development perfectly synced.",
-    url: "https://penpot.app",
-    tags: ["design", "prototype", "vector", "svg"],
-    language: "Clojure",
-    stars: 28900,
-    forks: 1400,
-    license: "MPL-2.0",
-    type: "open-source",
-    submitterId: "system",
-    submitterName: "OpenAlt Core",
-    rating: 4.8,
-    ratingCount: 198,
-    upvotes: 1540,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: "mock_appwrite",
-    name: "Appwrite",
-    description: "A secure, scalable backend server package for Flutter, Web, Android, iOS, and server runtimes. Includes easy authentication, complex database querying, file storage, and tasks scheduler.",
-    url: "https://appwrite.io",
-    tags: ["backend", "baas", "database", "auth"],
-    language: "PHP",
-    stars: 39500,
-    forks: 3100,
-    license: "BSD-3-Clause",
-    type: "open-source",
-    submitterId: "system",
-    submitterName: "OpenAlt Core",
-    rating: 4.7,
-    ratingCount: 215,
-    upvotes: 1210,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
+// Removed MOCK_FEATURED_PROJECTS to ensure 100% real algorithmic ranking
 
 export default function App() {
   const [currentView, setView] = useState<ViewType>("discover");
@@ -567,13 +509,19 @@ export default function App() {
           list.push(doc.data() as Project);
         });
         
-        // Ensure we always have our 3 premium animated mock projects at the top to satisfy user's literal prompt!
-        const mergedList = [...MOCK_FEATURED_PROJECTS, ...list.filter(p => !p.id.startsWith("mock_"))];
-        setFeaturedProjects(mergedList);
+        // Implement a purely organic Curated algorithm: Sort by Rating heavily, then by Upvotes
+        const algorithmicList = list
+          .filter(p => !p.id.startsWith("mock_"))
+          .sort((a, b) => {
+            const scoreA = ((a.rating || 0) * 10) + (a.upvotes || 0);
+            const scoreB = ((b.rating || 0) * 10) + (b.upvotes || 0);
+            return scoreB - scoreA;
+          });
+        
+        setFeaturedProjects(algorithmicList);
       } catch (err) {
-        // Safe degrade fallback
         console.warn("Could not retrieve featured indices:", err);
-        setFeaturedProjects(MOCK_FEATURED_PROJECTS);
+        setFeaturedProjects([]);
       } finally {
         setFeaturedLoading(false);
       }

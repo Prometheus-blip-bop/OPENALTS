@@ -269,14 +269,11 @@ export default function TrendingPage({
     allCandidates.forEach(p => {
       uniqueMap.set(p.id, p);
     });
-    // Sort primarily by upvotes, then by stars (GitHub engagement)
+    // Algorithmic blending for OS Leaderboard: 1 Upvote = 100 GitHub Stars weight
     return Array.from(uniqueMap.values()).sort((a, b) => {
-      const upvotesA = a.upvotes || 0;
-      const upvotesB = b.upvotes || 0;
-      if (upvotesB !== upvotesA) {
-        return upvotesB - upvotesA;
-      }
-      return (b.stars || 0) - (a.stars || 0);
+      const scoreA = ((a.upvotes || 0) * 100) + (a.stars || 0);
+      const scoreB = ((b.upvotes || 0) * 100) + (b.stars || 0);
+      return scoreB - scoreA;
     });
   })();
 
