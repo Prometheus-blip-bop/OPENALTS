@@ -1,0 +1,9 @@
+export const firebaseConfig = {
+  apiKey: "AIzaSyAaoIohiMbfx4XUVvHzNdCX2Ebb5XVd-pY",
+  authDomain: "openaltss.firebaseapp.com",
+  projectId: "openaltss",
+  storageBucket: "openaltss.firebasestorage.app",
+  messagingSenderId: "908224934433",
+  appId: "1:908224934433:web:af761b36ffd5ef2a29a960",
+  measurementId: "G-QDTL2VPYED"
+};

@@ -6,8 +6,7 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import { initializeApp as initFirebaseApp } from "firebase/app";
 import { getFirestore as getFirebaseFirestore, doc as getFirebaseDoc, updateDoc as updateFirebaseDoc, serverTimestamp as getFirebaseTimestamp } from "firebase/firestore";
-import fs from "fs";
-const firebaseConfig = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "firebase-applet-config.json"), "utf8"));
+import { firebaseConfig } from "./src/firebase-config";
 
 dotenv.config();
 
@@ -167,7 +166,7 @@ let serverDb: any = null;
 function getServerDb() {
   if (!serverDb) {
     fbApp = initFirebaseApp(firebaseConfig);
-    serverDb = getFirebaseFirestore(fbApp, firebaseConfig.firestoreDatabaseId);
+    serverDb = getFirebaseFirestore(fbApp);
   }
   return serverDb;
 }
